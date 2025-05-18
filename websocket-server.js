@@ -142,7 +142,7 @@ class WebSocketConnection {
         let code, reason;
         if (buffer.length >= 2) {
           code = view.getUint16(0, !1);
-          reason = (new TextDecoder()).decode(buffer);
+          reason = buffer.subarray(2);
         }
         this.close(code, reason);
         console.log("Close opcode.");
