@@ -225,3 +225,6 @@ for await (const conn of listener) {
   }
 }
 ```
+
+# License
+Do What the Fuck You Want to Public License [WTFPLv2](http://www.wtfpl.net/about/)
