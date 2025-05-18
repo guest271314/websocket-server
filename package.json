@@ -1,0 +1,23 @@
+{
+  "name": "websocket-server-js",
+  "version": "0.1.6",
+  "description": "JavaScript runtime agnostic WebSocket server",
+  "keywords": [
+    "WebSocket"
+  ],
+  "homepage": "https://github.com/guest271314/websocket-server",
+  "bugs": {
+    "url": "https://github.com/guest271314/websocket-server/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guest271314/websocket-server.git"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "guest271314",
+  "type": "esm",
+  "main": "websocket-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
