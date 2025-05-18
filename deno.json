@@ -1,0 +1,6 @@
+{
+  "name": "@guest271314/websocket-server",
+  "version": "0.1.6",
+  "license": "WTFPLv2",
+  "exports": "./websocket-server.js"
+}
