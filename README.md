@@ -52,6 +52,8 @@ server.on(
 ## Deno
 
 ```
+import { WebSocketConnection } from "./websocket-server.js";
+
 const decoder = new TextDecoder();
 const listener = Deno.listen({
   port: 8080,
@@ -121,6 +123,8 @@ for await (const conn of listener) {
 ## Bun
 
 ```
+import { WebSocketConnection } from "./websocket-server.js";
+
 const decoder = new TextDecoder();
 const server = Bun.listen({
   hostname: "0.0.0.0",
@@ -178,7 +182,6 @@ console.log(
 import { WebSocketConnection } from "./websocket-server.js";
 
 const decoder = new TextDecoder();
-
 async function handleConnection(conn) {
   const writer = conn.writable.getWriter();
   const { readable: wsReadable, writable: wsWritable } = new TransformStream({}, {}, {
