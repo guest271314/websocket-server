@@ -182,14 +182,21 @@ console.log(
 import { WebSocketConnection } from "./websocket-server.js";
 
 const decoder = new TextDecoder();
-async function handleConnection(conn) {
-  const writer = conn.writable.getWriter();
-  const { readable: wsReadable, writable: wsWritable } = new TransformStream({}, {}, {
-    highWaterMark: 1
-  }),
+
+async function handleConnection(connection) {
+  const wsConnection = await connection.opened;
+  console.log(`WebSocket connection from ${wsConnection.remoteAddress}:${wsConnection.remotePort}`);
+  const writer = wsConnection.writable.getWriter();
+  const { readable: wsReadable, writable: wsWritable } = new TransformStream(
+      {},
+      {},
+      {
+        highWaterMark: 1,
+      },
+    ),
     wsWriter = wsWritable.getWriter();
   let ws;
-  for await (const value of conn.readable) {
+  for await (const value of wsConnection.readable) {
     const request = decoder.decode(value);
     if (/upgrade: websocket/i.test(request)) {
       const [key] = request.match(/(?<=Sec-WebSocket-Key: ).+/i);
@@ -210,16 +217,20 @@ async function handleConnection(conn) {
   console.log("WebSocket client connection closed");
   await wsWriter.close();
 }
-const listener = await tjs.listen("tcp", "0.0.0.0", "44818");
-const { family, ip, port } = listener.localAddress;
+
+const socket = new TCPServerSocket("0.0.0.0", {
+  localPort: 8080,
+});
+
+const { readable, localAddress, localPort } = await socket.opened;
+
 console.log(
-  `${navigator.userAgent} WebSocket server listening on family: ${family}, ip: ${ip}, port: ${port}`,
+  `${navigator.userAgent} WebSocket server listening on ${localAddress}:${localPort}`,
 );
 
-for await (const conn of listener) {
+for await (const conn of readable) {
   try {
-    console.log({ conn });
-    handleConnection(conn).catch((e) => {apps
+    handleConnection(conn).catch((e) => {
       console.log({ e });
     });
   } catch (e) {
