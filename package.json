@@ -15,7 +15,7 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "author": "guest271314",
-  "type": "esm",
+  "type": "module",
   "main": "websocket-server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
