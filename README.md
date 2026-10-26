@@ -138,24 +138,40 @@ const server = Bun.listen({
           key,
           socket,
         );
-        this.ws = new WebSocketConnection(this.wsReadable, socket)
+        const writable = new WritableStream({
+          start: () => {
+            this.pending = null;
+            this.resume = null;
+            this.flush = () => {
+              if (!this.pending) return;
+              const n = socket.write(this.pending);
+              this.pending = n < this.pending.byteLength
+                ? this.pending.subarray(n)
+                : null;
+              if (!this.pending) this.resume?.(), (this.resume = null);
+            };
+          },
+          write: async (chunk) => {
+            this.pending = chunk;
+            this.flush();
+            if (this.pending) await new Promise((r) => (this.resume = r));
+          },
+          close() {
+            socket.end();
+          },
+        });
+        new WebSocketConnection(socket.data.readable, writable)
           .processWebSocketStream().catch((e) => {
             throw e;
           });
       } else {
-        await this.wsWriter.ready;
-        await this.wsWriter.write(data);
+        await socket.data.writer.write(data);
       }
     },
     open(socket) {
       console.log("open");
-      this.ws = void 0;
-      const { readable: wsReadable, writable: wsWritable } =
-          new TransformStream(),
-        wsWriter = wsWritable.getWriter();
-      Object.assign(this, { wsReadable, wsWritable, wsWriter });
-      // Bun TCPSocket doesn't have close() method
-      socket.close = () => Promise.resolve(socket.end());
+      const { readable, writable } = new TransformStream();
+      socket.data = { readable, writer: writable.getWriter() };
     },
     close(socket) {
       console.log("Socket closed");
