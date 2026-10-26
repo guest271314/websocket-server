@@ -251,6 +251,3 @@ sec-websocket-accept: ` + key + `\r
 }
 
 export { WebSocketConnection };
-
-
-export { WebSocketConnection };
