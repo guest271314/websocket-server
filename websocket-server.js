@@ -15,9 +15,9 @@ class WebSocketConnection {
   buffer = new ArrayBuffer(0, { maxByteLength: 1024 ** 2 });
   closed = !1;
   opcodes = { TEXT: 1, BINARY: 2, PING: 9, PONG: 10, CLOSE: 8 };
-  constructor(readable, writable, abortController) {
+  constructor(readable, writable) {
+    console.log({readable, writable});
     this.readable = readable;
-    this.abortController = abortController;
     if (writable instanceof WritableStreamDefaultWriter) {
       this.writer = writable;
     } else if (writable instanceof WritableStream) {
@@ -28,25 +28,62 @@ class WebSocketConnection {
   async processWebSocketStream() {
     try {
       for await (const frame of this.readable) {
-        console.log(this.closed);
-        if (!this.closed) {
-          const { byteLength } = this.buffer;
-          console.log(byteLength, frame.length);
-          this.buffer.resize(byteLength + frame.length);
-          const view = new DataView(this.buffer);
-          for (let i = 0, j = byteLength; i < frame.length; i++, j++) {
-            view.setUint8(j, frame.at(i));
-          }
-          await this.processFrame();
-        } else {
-          break;
+        const { byteLength } = this.buffer;
+        // console.log(byteLength + frame.length);
+        this.buffer.resize(byteLength + frame.length);
+        const view = new DataView(this.buffer);
+        for (let i = 0, j = byteLength; i < frame.length; i++, j++) {
+          view.setUint8(j, frame.at(i));
         }
+        await this.processFrame();
       }
       console.log("WebSocket connection closed.");
     } catch (e) {
       console.log(e);
       console.trace();
+      // this.writer.close().catch(console.log);
     }
+  }
+  async writeFrame(opcode, payload) {
+    // console.log(this);
+    await this.writer.ready;
+    return this.writer.write(this.encodeMessage(opcode, payload))
+      .catch(console.log);
+  }
+  async send(obj) {
+    // console.log({ obj });
+    let opcode, payload;
+    if (obj instanceof Uint8Array) {
+      opcode = this.opcodes.BINARY;
+      payload = obj;
+    } else if (typeof obj == "string") {
+      opcode = this.opcodes.TEXT;
+      payload = obj;
+    } else {
+      throw new Error("Cannot send object. Must be string or Uint8Array");
+    }
+    await this.writeFrame(opcode, payload);
+  }
+  async close(code, reason) {
+    const opcode = this.opcodes.CLOSE;
+    let buffer;
+    if (code) {
+      buffer = new Uint8Array(reason.length + 2);
+      const view = new DataView(buffer.buffer);
+      view.setUint16(0, code, !1);
+      buffer.set(reason, 2);
+    } else {
+      buffer = new Uint8Array(0);
+    }
+    console.log({ opcode, reason, buffer });
+    await this.writeFrame(opcode, buffer);
+    await this.writer.close().catch((e) => {
+      console.log(e);
+      this.buffer.resize(0);
+    });
+    await this.writer.closed;
+    this.buffer.resize(0);
+    this.closed = !0;
   }
   async processFrame() {
     let length, maskBytes;
@@ -70,7 +107,7 @@ class WebSocketConnection {
         idx += 2;
       } else if (length == 127) {
         if (view.getUint32(2, !1) != 0) {
-          await this.close(1009, "");
+          this.close(1009, "");
         }
         length = view.getUint32(6, !1);
         idx += 8;
@@ -84,19 +121,11 @@ class WebSocketConnection {
     let payload = buf.subarray(idx, idx + length);
     payload = this.unmask(maskBytes, payload);
     await this.handleFrame(opcode, payload);
-    if (this.buffer.byteLength === 0 && this.closed) {
-      try {
-        return !0;
-      } catch (e) {
-        console.log(e);
-      }
-    }
+
     if (idx + length === 0) {
       console.log(`this.buffer.length: ${this.buffer.byteLength}.`);
       return !1;
     }
-    console.log(this.buffer.byteLength, idx, length);
-
     for (let i = 0, j = idx + length; j < this.buffer.byteLength; i++, j++) {
       view.setUint8(i, view.getUint8(j));
     }
@@ -127,49 +156,12 @@ class WebSocketConnection {
           code = view.getUint16(0, !1);
           reason = buffer.subarray(2);
         }
-        await this.close(code, reason);
-        console.log("Close opcode.", new TextDecoder().decode(reason));
+        this.close(code, reason);
+        console.log("Close opcode.");
         break;
       default:
-        await this.close(1002, "unknown opcode");
+        this.close(1002, "unknown opcode");
     }
-  }
-  async writeFrame(opcode, payload) {
-    await this.writer.ready;
-    return this.writer.write(this.encodeMessage(opcode, payload))
-      .catch(console.log);
-  }
-  async send(obj) {
-    console.log({ obj });
-    let opcode, payload;
-    if (obj instanceof Uint8Array) {
-      opcode = this.opcodes.BINARY;
-      payload = obj;
-    } else if (typeof obj == "string") {
-      opcode = this.opcodes.TEXT;
-      payload = obj;
-    } else {
-      throw new Error("Cannot send object. Must be string or Uint8Array");
-    }
-    await this.writeFrame(opcode, payload);
-  }
-  async close(code, reason) {
-    const opcode = this.opcodes.CLOSE;
-    let buffer;
-    if (code) {
-      buffer = new Uint8Array(reason.length + 2);
-      const view = new DataView(buffer.buffer);
-      view.setUint16(0, code, !1);
-      buffer.set(reason, 2);
-    } else {
-      buffer = new Uint8Array(0);
-    }
-    console.log({ opcode, reason, buffer }, new TextDecoder().decode(reason));
-    await this.writeFrame(opcode, buffer);
-    await this.writer.close();
-    await this.writer.closed;
-    this.buffer.resize(0);
-    this.closed = !0;
   }
   unmask(maskBytes2, data) {
     let payload = new Uint8Array(data.length);
@@ -252,10 +244,13 @@ sec-websocket-accept: ` + key + `\r
         "Sec-Websocket-Accept: " + key + "\r\n\r\n";
       const encoded = encoder.encode(header);
       return writable instanceof WritableStream
-        ? new Response(encode).body.pipeTo(writable, { preventClose: !0 })
+        ? new Response(encoded).body.pipeTo(writable, { preventClose: !0 })
         : writable.write(encoded);
     }
   }
 }
+
+export { WebSocketConnection };
+
 
 export { WebSocketConnection };
