@@ -192,7 +192,7 @@ console.log(
 );
 ```
 
-## txiki.js
+## Direct Sockets/txiki.js
 
 ```
 import { WebSocketConnection } from "./websocket-server.js";
