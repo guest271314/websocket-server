@@ -202,7 +202,7 @@ function sha1(msg: Uint8Array<ArrayBuffer>): Uint8Array<ArrayBuffer> {
         f = b ^ c ^ d;
         k = 3395469782 | 0;
       }
-      const tmp = (rotl(a, 5) + f + e + k + w[i]) | 0;
+      const tmp: number = (rotl(a, 5) + f + e + k + w[i]) | 0;
       e = d;
       d = c;
       c = rotl(b, 30);
