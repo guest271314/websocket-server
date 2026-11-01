@@ -332,7 +332,7 @@ To run: wasmtime -W gc=y,function-references=y,tail-call=y,exceptions=y /home/us
 mv /home/user/bin/js2wasm-out/websocket-server-wasm-debug.wasm ~/bin/websocket-server-wasm/websocket-server-wasi-js2wasm-debug.wasm
 ```
 
-Make sure to double-quote the value passed to `wasmtime`'s `-W` option to avoid this error `Quote the value passed to `-W` to avoid this error `socat[87199] E parseopts_table(): unknown option "function-references"``
+Make sure to double-quote the value passed to `wasmtime`'s `-W` option to avoid this error `socat[87199] E parseopts_table(): unknown option "function-references"`
 ```shell
 socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W "gc=y,function-references=y,tail-call=y,exceptions=y,exceptions=y" websocket-server-wasi-js2wasm-debug.wasm'
 
