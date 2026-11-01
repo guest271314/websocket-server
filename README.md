@@ -349,4 +349,6 @@ node websocket-stream-client.js
 # License
 Do What the Fuck You Want to Public License [WTFPLv2](http://www.wtfpl.net/about/)
 
-sha1-uint8array: https://github.com/kawanet/sha1-uint8array/?tab=readme-ov-file#mit-license
+`sha1-uint8array`: https://github.com/kawanet/sha1-uint8array/?tab=readme-ov-file#mit-license
+
+`jz`: https://github.com/dy/jz/blob/main/LICENSE
