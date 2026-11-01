@@ -39,7 +39,7 @@ function log(msg: string): void {
 function nodeFsWrite(buf: Uint8Array<ArrayBuffer>): void {
   let n: number = 0;
   while (n < buf.length) {
-    const w = writeSync(stdout, buf, n, buf.length);
+    const w: number = writeSync(stdout, buf, n, buf.length);
     if (w <= 0) {
       return void(0);
     }
