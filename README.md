@@ -257,6 +257,95 @@ for await (const conn of readable) {
 
 ```
 
+## TypeScript/JavaScript AOT compiled to WASM/native executable
+
+### jz
+
+```shell
+bun build websocket-server-wasm-debug.ts --target node --outfile websocket-server-wasm-debug.js --no-bundle
+jz-cli websocket-server-wasm-debug.js --host wasi -o websocket-server-wasi-jz-debug.wasm
+```
+
+```shell
+node node-jspi-host.mjs ./websocket-server-wasi-jz-debug.wasm 8080
+```
+
+
+```shell
+socat TCP-LISTEN:8080,reuseaddr,fork EXEC:"node --no-warnings node-wasi.mjs websocket-server-wasi-jz-debug.wasm"
+```
+
+```shell
+socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W exceptions=y websocket-server-wasi-jz-debug.wasm'
+
+```
+### scriptc
+
+```shell
+SCRIPTC_NO_CACHE=1 SCRIPTC_TARGET=wasm32-wasi bun x scriptc \
+build ~/bin/websocket-server-wasm/websocket-server-wasm-debug.ts \
+--optimization=release --strip \
+-o ~/bin/websocket-server-wasm/websocket-server-wasi-scriptc-debug.wasm
+/home/user/bin/websocket-server-wasm/websocket-server-wasi-scriptc-debug.wasm
+```
+
+This path intermittenly exits after client closed, requires restart; blocking, can 
+momentarily freeze machine.
+
+```shell
+node node-jspi-host.mjs ./websocket-server-wasi-scriptc-debug.wasm 8080
+```
+
+Works.
+```shell
+socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W exceptions=y websocket-server-wasi-scriptc-debug.wasm'
+```
+
+#### Compile to native executable
+
+```shell
+SCRIPTC_CC="zig cc" SCRIPTC_NO_CACHE=1 bun x scriptc build ~/bin/websocket-server-wasm/websocket-server-wasm-debug.ts --optimization=release -o ~/bin/websocket-server-wasm/websocket-server-wasi-scriptc-debug
+```
+
+```shell
+socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'/home/user/bin/websocket-server-wasm/websocket-server-wasi-scriptc-debug'
+```
+
+### js2wasm 
+
+```shell
+bun ./node_modules/@loopdive/js2/src/cli.ts ~/bin/websocket-server-wasm/websocket-server-wasm-debug.ts --wit --target wasi -O4 -o ~/bin/js2wasm-out
+/home/user/bin/js2wasm-out/websocket-server-wasm-debug.wasm  (22909 bytes)
+/home/user/bin/js2wasm-out/websocket-server-wasm-debug.wat  (606876 chars)
+/home/user/bin/js2wasm-out/websocket-server-wasm-debug.d.ts  (24 chars)
+/home/user/bin/js2wasm-out/websocket-server-wasm-debug.imports.js  (3658 chars)
+/home/user/bin/js2wasm-out/websocket-server-wasm-debug.wit  (324 chars)
+
+To run: wasmtime -W gc=y,function-references=y,tail-call=y,exceptions=y /home/user/bin/js2wasm-out/websocket-server-wasm-debug.wasm
+```
+
+```shell
+mv /home/user/bin/js2wasm-out/websocket-server-wasm-debug.wasm ~/bin/websocket-server-wasm/websocket-server-wasi-js2wasm-debug.wasm
+```
+
+Make to to double-quote the value passed to `wasmtime`'s `-W` option to avoid this error `Quote the value passed to `-W` to avoid this error `socat[87199] E parseopts_table(): unknown option "function-references"``
+```shell
+socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W "gc=y,function-references=y,tail-call=y,exceptions=y,exceptions=y" websocket-server-wasi-js2wasm-debug.wasm'
+
+```
+
+### Testing
+
+Roundtrip text.
+```shell
+node client.mjs 8080
+```
+
+Roundtrip 20 MiB of `Uint8Array` data.
+```shell
+node websocket-stream-client.js
+```
+
 # License
 Do What the Fuck You Want to Public License [WTFPLv2](http://www.wtfpl.net/about/)
 
