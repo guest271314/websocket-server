@@ -1,3 +1,4 @@
+//! https://github.com/guest271314/websocket-stream-impl
 console.log(`\u001b[1;32m${navigator.userAgent}\x1b[0m`);
 
 class WebSocketStreamImpl {
