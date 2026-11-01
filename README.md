@@ -264,6 +264,9 @@ for await (const conn of readable) {
 
 ```shell
 bun build websocket-server-wasm-debug.ts --target node --outfile websocket-server-wasm-debug.js --no-bundle
+```
+
+```shell
 jz websocket-server-wasm-debug.js --host wasi -o websocket-server-wasi-jz-debug.wasm
 ```
 
