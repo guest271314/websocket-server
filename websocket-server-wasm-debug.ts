@@ -315,8 +315,8 @@ function processWebSocketStream(): void {
   while (!closed) {
     // log("DEBUG loop top");
     if (!readExact(head, 2)) break;
-    const opcode = head[0] & 15;
-    let length = head[1] & 127;
+    const opcode: number = head[0] & 15;
+    let length: number = head[1] & 127;
     if (length === 126) {
       if (!readExact(ext, 2)) break;
       length = (ext[0] << 8) | ext[1];
