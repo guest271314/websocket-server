@@ -117,7 +117,7 @@ function base64(bytes: Uint8Array<ArrayBuffer>): string {
   let out: string = "";
   let i: number = 0;
   while (i + 2 < bytes.length) {
-    const n = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+    const n: number = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
     out += B64.charAt((n >> 18) & 63);
     out += B64.charAt((n >> 12) & 63);
     out += B64.charAt((n >> 6) & 63);
@@ -346,9 +346,9 @@ function processWebSocketStream(): void {
 }
 
 function hashWebSocketKey(secKeyWebSocket: string): void {
-  const hash = sha1(encode(secKeyWebSocket + KEY_SUFFIX));
-  const key = base64(hash);
-  const header = "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" +
+  const hash: Uint8Array<ArrayBuffer> = sha1(encode(secKeyWebSocket + KEY_SUFFIX));
+  const key: string = base64(hash);
+  const header: string = "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" +
     "Upgrade: WebSocket\r\n" +
     "Connection: Upgrade\r\n" +
     "Sec-Websocket-Accept: " +
