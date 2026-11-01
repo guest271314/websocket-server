@@ -293,14 +293,10 @@ build ~/bin/websocket-server-wasm/websocket-server-wasm-debug.ts \
 /home/user/bin/websocket-server-wasm/websocket-server-wasi-scriptc-debug.wasm
 ```
 
-This path intermittenly exits after client closed, requires restart; blocking, can 
-momentarily freeze machine.
-
 ```shell
 node node-jspi-host.mjs ./websocket-server-wasi-scriptc-debug.wasm 8080
 ```
 
-Works.
 ```shell
 socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W exceptions=y websocket-server-wasi-scriptc-debug.wasm'
 ```
