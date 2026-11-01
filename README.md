@@ -3,6 +3,7 @@ JavaScript runtime agnostic WebSocket server.
 
 Fork of https://gist.github.com/d0ruk/3921918937e234988dfaccfdee781bd3, which is based on _The Definitive Guide to HTML5 WebSocket_ by Vanessa Wang, Frank Salim, and Peter Moskovits at p. 51, _Building a Simple WebSocket Server_.
 
+
 # Usage
 
 ## Node.js
@@ -257,7 +258,7 @@ for await (const conn of readable) {
 
 ```
 
-## TypeScript/JavaScript AOT compiled to WASM/native executable
+## TypeScript/JavaScript AOT compiled to wasm32-wasip1/native executable WebSocket state machine: Bring your own socket
 
 ### jz
 
