@@ -334,6 +334,40 @@ socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W "gc=y,function-referenc
 
 ```
 
+### componentize-qjs
+
+QuickJS interpreter, not strictly AOT.
+
+```shell
+wkg fetch --cache ./.wit-cache .
+mkdir p3
+mkdir p3/websocket
+cp -r deps p3/websocket
+```
+
+```shell
+bun x componentize-qjs -n websocket-server-wasi-p3 -w ./p3/websocket -m \
+-opt-size --js ./p3/websocket-server-wasip3.js -o ./p3/websocket-server-wasip3.wasm
+```
+
+```shell
+socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W component-model-async=y -S p3=y websocket-server-wasip3.wasm'
+componentize-qjs WebSocket state machine
+```
+
+`package.wit`
+```wit
+package websocket-server:websocket-server-wasi-p3;
+ 
+world websocket-server-wasi-p3 {
+    import wasi:cli/stdin@0.3.0;
+    import wasi:cli/stdout@0.3.0;
+    import wasi:cli/stderr@0.3.0;
+
+    export wasi:cli/run@0.3.0;
+}
+```
+
 ### Testing
 
 Roundtrip text.
