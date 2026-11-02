@@ -336,6 +336,8 @@ socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W "gc=y,function-referenc
 
 ### componentize-qjs
 
+#### State machine
+
 QuickJS NG interpreter, not strictly AOT.
 
 ```javascript
@@ -408,6 +410,73 @@ world websocket-server-wasi-p3 {
 }
 ```
 
+#### wasi TcpSocket, wasmtime -S inherit-network
+
+```shell
+bun x componentize-qjs -n websocket-server-wasi-p3 -w ./p3/websocket -m --opt-size \
+  --js ./p3/websocket-server-wasip3-wasmtime.js -o ./p3/websocket-server-wasip3-wasmtime.wasm
+```
+
+```shell
+wasmtime run -W component-model-async=y -S p3=y -S inherit-network ./p3/websocket-server-wasip3-wasmtime.wasm
+```
+
+```javascript
+export const run = {
+  async run() {
+    const d = wit.Stream(wit.Stream.U8);
+    dbg = d.writable;
+    const dbgDone = stdout.writeViaStream(d.readable);
+    await trace("start");
+    const names = (o) => {
+      const r = [];
+      for (
+        let p = o;
+        p && p !== Object.prototype;
+        p = Object.getPrototypeOf(p)
+      ) {
+        r.push(...Object.getOwnPropertyNames(p));
+      }
+      return r.join(",");
+    };
+    await trace("wit: " + names(wit));
+    await trace("wit.Stream: " + names(wit.Stream));
+    await trace("send.length: " + TcpSocket.prototype.send.length);
+    const server = step("create", () => TcpSocket.create("ipv4"));
+    await trace("created");
+    step(
+      "bind",
+      () =>
+        server.bind({
+          tag: "ipv4",
+          val: { port: 8080, address: [127, 0, 0, 1] },
+        }),
+    );
+    await trace("bound");
+    const accepted = step("listen", () => server.listen());
+    await trace("listening");
+
+    for (;;) {
+      await trace("waiting for accept");
+      const batch = await accepted.read(1);
+      await trace("accepted: " + (batch && batch.length));
+      if (!batch || batch.length === 0) break;
+      for (const sock of batch) {
+        handleConnection(sock).catch((e) =>
+          trace(
+            "conn failed: " +
+              (e && (e.message || JSON.stringify(e.payload ?? e))),
+            true,
+          )
+        );
+      }
+    }
+    await trace("loop ended");
+    d.writable.drop();
+    await dbgDone;
+  },
+};
+```
 ### Testing
 
 Roundtrip text.
