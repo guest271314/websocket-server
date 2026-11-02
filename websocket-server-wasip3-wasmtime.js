@@ -170,10 +170,6 @@ function validCloseCode(code) {
     (code >= 1007 && code <= 1014) ||
     (code >= 3000 && code <= 4999);
 }
-// let wsClosed = false;
-//let reader;
-//let out; // writable end of the stdout stream
-//let errOut; // writable end of the stderr stream
 
 class Reader {
   constructor(input) {
