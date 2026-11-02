@@ -336,7 +336,7 @@ socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W "gc=y,function-referenc
 
 ### componentize-qjs
 
-QuickJS interpreter, not strictly AOT.
+QuickJS NG interpreter, not strictly AOT.
 
 ```shell
 wkg fetch --cache ./.wit-cache .
