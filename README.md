@@ -338,6 +338,46 @@ socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W "gc=y,function-referenc
 
 QuickJS NG interpreter, not strictly AOT.
 
+```javascript
+export const run = {
+  async run() {
+    const [input, status] = stdin.readViaStream();
+
+    const o = wit.Stream(wit.Stream.U8);
+    out = o.writable;
+    const writeDone = stdout.writeViaStream(o.readable);
+
+    const e = wit.Stream(wit.Stream.U8);
+    errOut = e.writable;
+    const errDone = stderr.writeViaStream(e.readable);
+    await log("componentize-qjs WebSocket state machine");
+    reader = new Reader(input);
+    try {
+      const header = new Uint8Array(1024);
+      const bytesRead = await reader.readHeaders(header);
+      const headers = decode(header, bytesRead);
+      const at = headers.toLowerCase().indexOf("sec-websocket-key:") + 18;
+      const secWebSocketKey = headers
+        .slice(at, headers.indexOf("\r\n", at))
+        .trim();
+      await hashWebSocketKey(secWebSocketKey);
+      await processWebSocketStream();
+    } finally {
+      out.drop();
+      errOut.drop();
+      input.drop();
+    }
+
+    const written = await writeDone;
+    if (written.tag === "err") throw written.val;
+    const errWritten = await errDone;
+    if (errWritten.tag === "err") throw errWritten.val;
+    const statusResult = await status.read();
+    if (statusResult.tag === "err") throw statusResult.val;
+  },
+};
+```
+
 ```shell
 wkg fetch --cache ./.wit-cache .
 mkdir p3
@@ -360,11 +400,11 @@ componentize-qjs WebSocket state machine
 package websocket-server:websocket-server-wasi-p3;
  
 world websocket-server-wasi-p3 {
-    import wasi:cli/stdin@0.3.0;
-    import wasi:cli/stdout@0.3.0;
-    import wasi:cli/stderr@0.3.0;
+  import wasi:cli/stdin@0.3.0;
+  import wasi:cli/stdout@0.3.0;
+  import wasi:cli/stderr@0.3.0;
 
-    export wasi:cli/run@0.3.0;
+  export wasi:cli/run@0.3.0;
 }
 ```
 
