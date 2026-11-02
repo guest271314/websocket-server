@@ -489,6 +489,10 @@ Roundtrip 20 MiB of `Uint8Array` data.
 node websocket-stream-client.js
 ```
 
+```shell
+node ws-test.mjs
+```
+
 # License
 Do What the Fuck You Want to Public License [WTFPLv2](http://www.wtfpl.net/about/)
 
