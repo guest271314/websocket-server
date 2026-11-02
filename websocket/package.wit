@@ -1,0 +1,10 @@
+package websocket-server:websocket-server-wasi-p3;
+ 
+world websocket-server-wasi-p3 {
+  import wasi:cli/stdin@0.3.0;
+  import wasi:cli/stdout@0.3.0;
+  import wasi:cli/stderr@0.3.0;
+  import wasi:sockets/types@0.3.0;
+
+  export wasi:cli/run@0.3.0;
+}
