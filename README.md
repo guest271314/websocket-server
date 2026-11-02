@@ -262,6 +262,21 @@ for await (const conn of readable) {
 
 ### jz
 
+```javascript
+function main() {
+  const header = new Uint8Array(1024);
+  const bytesRead = nodeFsRead(header);
+  const headers = decode(header, bytesRead);
+  const at = headers.toLowerCase().indexOf("sec-websocket-key:") + 18;
+  const secWebSocketKey = headers.slice(at, headers.indexOf(`\r
+`, at)).trim();
+  hashWebSocketKey(secWebSocketKey);
+  processWebSocketStream();
+  return;
+}
+main();
+```
+
 ```shell
 bun build websocket-server-wasm-debug.ts --target node --outfile websocket-server-wasm-debug.js --no-bundle
 ```
@@ -281,7 +296,6 @@ socat TCP-LISTEN:8080,reuseaddr,fork EXEC:"node --no-warnings node-wasi.mjs webs
 
 ```shell
 socat TCP-LISTEN:8080,reuseaddr,fork SYSTEM:'wasmtime -W exceptions=y websocket-server-wasi-jz-debug.wasm'
-
 ```
 ### scriptc
 
